@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=42.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v"
+pythonpath = [
+    "."
+]
+
+[project]
+name = "data-valuation"
+version = "0.1.0"
+description = "Data valuation methods implementation"
+authors = [
+    {name = "Takumi Shibata", email = "shibata@ai.lab.uec.ac.jp"},
+]
+dependencies = [
+    "numpy",
+    "torch",
+    "transformers",
+    "scikit-learn",
+    "wandb",
+    "pytest",
+    "tiktoken",
+    "sentencepiece",
+]
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.urls]
+"Source" = "https://github.com/yourname/your_library"
+"Tracker" = "https://github.com/yourname/your_library/issues"
