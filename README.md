@@ -17,7 +17,7 @@ This project implements various data valuation methods to assess the importance 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/data-valuation.git
+git clone https://github.com/takumi0shibata/data-valuation.git
 cd data-valuation
 ```
 
@@ -91,7 +91,7 @@ shapley_valuator = ShapleyValuator(
 dvrl_valuator = DVRLValuator(
     prompt_id=1,
     device="cuda",
-    metric="mse",
+    metric="qwk",
     hidden_dim=100,         # Optional: Hidden dimension for value estimator
     iterations=1000,        # Optional: Number of outer iterations
     inner_iterations=100    # Optional: Number of inner iterations
