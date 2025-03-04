@@ -33,5 +33,5 @@ requires-python = ">=3.11"
 dev = ["pytest"]
 
 [project.urls]
-"Source" = "https://github.com/yourname/your_library"
-"Tracker" = "https://github.com/yourname/your_library/issues"
+"Source" = "https://github.com/takumi0shibata/data-valuation"
+"Tracker" = "https://github.com/takumi0shibata/data-valuation/issues"

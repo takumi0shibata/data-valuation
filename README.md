@@ -15,6 +15,14 @@ This project implements various data valuation methods to assess the importance 
 
 ### Setup
 
+You can install this package directly from GitHub using pip:
+
+```bash
+pip install git+https://github.com/takumi0shibata/data-valuation.git
+```
+
+Alternatively, you can install it locally:
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/takumi0shibata/data-valuation.git
