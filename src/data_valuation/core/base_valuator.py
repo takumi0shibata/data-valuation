@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import torch
 from typing import Dict, List, Union, Tuple, Optional, Any, Literal
 from transformers import AutoTokenizer, AutoModel
+from tqdm import tqdm
 
 class BaseValuator(ABC):
     """Abstract base class for all data valuators."""
@@ -18,6 +19,7 @@ class BaseValuator(ABC):
         wandb_name: Optional[str] = None,
         embedding_model: str = "microsoft/deberta-v3-large",
         max_length: int = 512,
+        pooling_strategy: Literal["mean", "cls"] = "cls",
         **kwargs
     ):
         """
@@ -32,6 +34,7 @@ class BaseValuator(ABC):
             wandb_name: Name of the W&B run. If None, a default name will be used.
             embedding_model: Name or path of the pre-trained model for text embedding.
             max_length: Maximum sequence length for tokenization.
+            pooling_strategy: Strategy for pooling embeddings ('mean' or 'cls').
             **kwargs: Additional valuator-specific arguments.
         """
         self.prompt_id = prompt_id
@@ -44,6 +47,7 @@ class BaseValuator(ABC):
         self.config = kwargs
         self.embedding_model = embedding_model
         self.max_length = max_length
+        self.pooling_strategy = pooling_strategy
         
         # Initialize tokenizer and model for embeddings
         self.tokenizer = None
@@ -85,7 +89,7 @@ class BaseValuator(ABC):
         batch_size = 32  # Adjust based on available memory
         
         with torch.no_grad():
-            for i in range(0, len(texts), batch_size):
+            for i in tqdm(range(0, len(texts), batch_size), desc="Generating embeddings", total=(len(texts) + batch_size - 1) // batch_size):
                 batch_texts = texts[i:i + batch_size]
                 inputs = self.tokenizer(
                     batch_texts,
@@ -96,11 +100,16 @@ class BaseValuator(ABC):
                 ).to(self.device)
                 
                 outputs = self.model(**inputs)
-                # Use mean pooling to get sentence embeddings
-                attention_mask = inputs['attention_mask']
                 token_embeddings = outputs.last_hidden_state
-                input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-                sentence_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+                
+                if self.pooling_strategy == "mean":
+                    # Mean pooling
+                    attention_mask = inputs['attention_mask']
+                    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+                    sentence_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+                else:  # cls
+                    # Use CLS token embedding
+                    sentence_embeddings = token_embeddings[:, 0, :]
                 
                 embeddings.append(sentence_embeddings.cpu().numpy())
         
@@ -129,9 +138,9 @@ class BaseValuator(ABC):
             A dictionary mapping sample IDs to estimated values.
         """
         # Convert texts to embeddings if input is List[str]
-        if isinstance(x_train, list) and isinstance(x_train[0], str):
+        if isinstance(x_train[0], str):
             x_train = self.get_embeddings(x_train)
-        if isinstance(x_val, list) and isinstance(x_val[0], str):
+        if isinstance(x_val[0], str):
             x_val = self.get_embeddings(x_val)
             
         return self._estimate_values_impl(x_train, y_train, x_val, y_val, sample_ids)
@@ -167,13 +176,12 @@ class BaseValuator(ABC):
         
         # Convert any non-serializable keys to strings
         serializable_values = {str(k): v for k, v in values.items()}
-        
-        # Save as JSON
-        with open(output_path, 'w') as f:
-            json.dump(serializable_values, f, indent=2)
             
-        # Also save as numpy for convenience
-        np_output_path = os.path.splitext(output_path)[0] + '.npy'
-        np.save(np_output_path, np.array(list(values.values())))
+        # Save as CSV for convenience
+        csv_output_path = os.path.splitext(output_path)[0] + '.csv'
+        with open(csv_output_path, 'w') as f:
+            f.write("sample_id,value\n")
+            for sample_id, value in serializable_values.items():
+                f.write(f"{sample_id},{value}\n")
         
-        print(f"Values saved to {output_path} and {np_output_path}")
+        print(f"Values saved to {output_path}")

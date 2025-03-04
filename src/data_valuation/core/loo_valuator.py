@@ -27,6 +27,7 @@ class LOOValuator(BaseValuator):
         wandb_name: Optional[str] = None,
         embedding_model: str = "microsoft/deberta-v3-large",
         max_length: int = 512,
+        pooling_strategy: Literal["mean", "cls"] = "cls",
         batch_size: int = 512,
         epochs: int = 100,
         model_type: str = "mlp",
@@ -47,6 +48,7 @@ class LOOValuator(BaseValuator):
             wandb_name: Name of the W&B run. If None, a default name will be used.
             embedding_model: Name or path of the pre-trained model for text embedding.
             max_length: Maximum sequence length for tokenization.
+            pooling_strategy: Pooling strategy for text embedding.
             batch_size: Batch size for training.
             epochs: Number of training epochs.
             model_type: Type of model to use ('mlp' or 'features').
@@ -64,6 +66,7 @@ class LOOValuator(BaseValuator):
             wandb_name=wandb_name,
             embedding_model=embedding_model,
             max_length=max_length,
+            pooling_strategy=pooling_strategy,
             **kwargs
         )
         self.batch_size = batch_size
@@ -80,6 +83,7 @@ class LOOValuator(BaseValuator):
         print(f"Metric: {metric}")
         print(f"Embedding Model: {embedding_model}")
         print(f"Max Length: {max_length}")
+        print(f"Pooling Strategy: {pooling_strategy}")
         print(f"Batch Size: {batch_size}")
         print(f"Epochs: {epochs}")
         print(f"Model Type: {model_type}")
@@ -96,6 +100,7 @@ class LOOValuator(BaseValuator):
                 "metric": metric,
                 "embedding_model": embedding_model,
                 "max_length": max_length,
+                "pooling_strategy": pooling_strategy,
                 "batch_size": batch_size,
                 "epochs": epochs,
                 "model_type": model_type,
@@ -247,5 +252,9 @@ class LOOValuator(BaseValuator):
         # Clean up
         if os.path.exists(model_path):
             os.remove(model_path)
+        
+        # Finalize wandb run
+        if self.wandb_logging:
+            wandb.finish()
             
         return np.array(loo_values)

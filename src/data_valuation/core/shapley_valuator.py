@@ -23,6 +23,7 @@ class ShapleyValuator(BaseValuator):
         wandb_name: Optional[str] = None,
         embedding_model: str = "microsoft/deberta-v3-large",
         max_length: int = 512,
+        pooling_strategy: Literal["mean", "cls"] = "cls",
         max_iter: int = 5000,
         threshold: float = 0.05,
         model_type: str = "mlp",
@@ -42,6 +43,7 @@ class ShapleyValuator(BaseValuator):
             wandb_name: Name of the W&B run. If None, a default name will be used.
             embedding_model: Name or path of the pre-trained model for text embedding.
             max_length: Maximum sequence length for tokenization.
+            pooling_strategy: Pooling strategy for the embedding model.
             max_iter: Maximum number of iterations.
             threshold: Convergence threshold.
             model_type: Type of model to use ('mlp' or 'features').
@@ -58,6 +60,7 @@ class ShapleyValuator(BaseValuator):
             wandb_name=wandb_name,
             embedding_model=embedding_model,
             max_length=max_length,
+            pooling_strategy=pooling_strategy,
             **kwargs
         )
         self.max_iter = max_iter
@@ -73,6 +76,7 @@ class ShapleyValuator(BaseValuator):
         print(f"Metric: {metric}")
         print(f"Embedding Model: {embedding_model}")
         print(f"Max Length: {max_length}")
+        print(f"Pooling Strategy: {pooling_strategy}")
         print(f"Max Iterations: {max_iter}")
         print(f"Threshold: {threshold}")
         print(f"Model Type: {model_type}")
@@ -89,6 +93,7 @@ class ShapleyValuator(BaseValuator):
                 "metric": metric,
                 "embedding_model": embedding_model,
                 "max_length": max_length,
+                "pooling_strategy": pooling_strategy,
                 "max_iter": max_iter,
                 "threshold": threshold,
                 "model_type": model_type,
@@ -239,5 +244,8 @@ class ShapleyValuator(BaseValuator):
                     "shapley_mean": np.mean(shapley_values),
                     "shapley_std": np.std(shapley_values)
                 })
+        # Finalize wandb run
+        if self.wandb_logging:
+            wandb.finish()
                 
         return shapley_values

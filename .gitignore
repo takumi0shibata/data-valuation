@@ -19,6 +19,8 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+wandb/
+examples/output_files/
 
 # Virtual Environment
 .venv

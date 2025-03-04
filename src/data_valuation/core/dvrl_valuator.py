@@ -30,6 +30,7 @@ class DVRLValuator(BaseValuator):
         wandb_name: Optional[str] = None,
         embedding_model: str = "microsoft/deberta-v3-large",
         max_length: int = 512,
+        pooling_strategy: Literal["mean", "cls"] = "cls",
         hidden_dim: int = 100,
         comb_dim: int = 10,
         iterations: int = 1000,
@@ -54,6 +55,7 @@ class DVRLValuator(BaseValuator):
             wandb_name: Name of the W&B run. If None, a default name will be used.
             embedding_model: Name or path of the pre-trained model for text embedding.
             max_length: Maximum sequence length for tokenization.
+            pooling_strategy: Pooling strategy for the embedding model.
             hidden_dim: Hidden dimension for value estimator.
             comb_dim: Combination dimension for value estimator.
             iterations: Number of outer iterations.
@@ -75,6 +77,7 @@ class DVRLValuator(BaseValuator):
             wandb_name=wandb_name,
             embedding_model=embedding_model,
             max_length=max_length,
+            pooling_strategy=pooling_strategy,
             **kwargs
         )
         self.hidden_dim = hidden_dim
@@ -97,6 +100,7 @@ class DVRLValuator(BaseValuator):
         print(f"Metric: {metric}")
         print(f"Embedding Model: {embedding_model}")
         print(f"Max Length: {max_length}")
+        print(f"Pooling Strategy: {pooling_strategy}")
         print(f"Hidden Dimension: {hidden_dim}")
         print(f"Combination Dimension: {comb_dim}")
         print(f"Iterations: {iterations}")
@@ -119,6 +123,7 @@ class DVRLValuator(BaseValuator):
                 "metric": metric,
                 "embedding_model": embedding_model,
                 "max_length": max_length,
+                "pooling_strategy": pooling_strategy,
                 "hidden_dim": hidden_dim,
                 "comb_dim": comb_dim,
                 "iterations": iterations,
@@ -316,7 +321,7 @@ class DVRLValuator(BaseValuator):
             )
             
             # Calculate performance
-            dvrl_perf = calculate_metric(y_val, y_valid_hat, self.metric)
+            dvrl_perf = calculate_metric(y_val, y_valid_hat, self.prompt_id, self.metric)
             
             # Calculate reward
             if self.metric == 'mse':
@@ -356,6 +361,10 @@ class DVRLValuator(BaseValuator):
         # Clean up
         if os.path.exists(model_path):
             os.remove(model_path)
+
+        # Finalize wandb run
+        if self.wandb_logging:
+            wandb.finish()
         
         # Convert numpy array to dictionary with float values
         data_values_dict = {i: float(v) for i, v in enumerate(data_values.cpu().numpy())}
