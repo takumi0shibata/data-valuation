@@ -15,5 +15,5 @@ setup(
         "tiktoken",
         "sentencepiece",
     ],
-    python_requires=">=3.11",
+    python_requires=">=3.10",
 )
