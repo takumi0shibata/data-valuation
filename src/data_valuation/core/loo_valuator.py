@@ -21,7 +21,7 @@ class LOOValuator(BaseValuator):
         prompt_id: int,
         device: str = "cpu",
         seed: int = 42,
-        metric: Literal["mse", "qwk", "corr"] = "mse",
+        metric: Literal["mse", "qwk", "corr"] = "mse", # TODO: suport other metrics (qwk, corr)
         wandb_logging: bool = False,
         wandb_project: str = "data-valuation",
         wandb_name: Optional[str] = None,

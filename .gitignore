@@ -21,6 +21,8 @@ wheels/
 *.egg
 wandb/
 examples/output_files/
+examples/expariments.py
+examples/summarize_expariments.py
 
 # Virtual Environment
 .venv

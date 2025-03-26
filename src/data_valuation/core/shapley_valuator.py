@@ -17,7 +17,7 @@ class ShapleyValuator(BaseValuator):
         prompt_id: int,
         device: str = "cpu",
         seed: int = 42,
-        metric: Literal["mse", "qwk", "corr"] = "mse",
+        metric: Literal["mse", "qwk", "corr"] = "mse", # TODO: support other metrics (qwk, corr)
         wandb_logging: bool = False,
         wandb_project: str = "data-valuation",
         wandb_name: Optional[str] = None,
@@ -219,7 +219,7 @@ class ShapleyValuator(BaseValuator):
                     val_loss = criterion(y_pred, y_val_tensor).item()
                 
                 # Update Shapley value
-                shapley_values[permutation[j]] = (t - 1) / t * shapley_values[permutation[j]] + 1 / t * (val_loss - losses[-1])
+                shapley_values[permutation[j]] = (t - 1) / t * shapley_values[permutation[j]] + 1 / t * (losses[-1] - val_loss)
                 losses.append(val_loss)
             
             # Check for convergence
